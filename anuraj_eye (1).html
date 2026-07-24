@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="hi" class="h-full bg-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anuraj Eye - मिस्त्री लेबर, नाप व खर्च हिसाब टूल</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2pdf for Watermarked PDF Downloads -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Vadodara:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Hind Vadodara', 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .tab-btn {
+            transition: all 0.2s ease-in-out;
+            color: #64748b;
+        }
+        .tab-btn.active {
+            color: #2563eb;
+            font-weight: 700;
+            background-color: rgba(239, 246, 255, 0.95);
+            border-radius: 0.75rem;
+        }
+        
+        /* High-Visibility Clean Watermark Background */
+        .watermark-bg {
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='220px' width='440px'><text transform='translate(40, 150) rotate(-22)' fill='rgba(37, 99, 235, 0.08)' font-size='42' font-weight='900' font-family='Arial'>Anuraj Eye</text></svg>");
+            background-repeat: repeat;
+        }
+
+        /* A4 Document Preview Sheet */
+        .a4-preview-sheet {
+            width: 100%;
+            max-width: 800px;
+            min-height: 1050px;
+            background: white;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
+            border-radius: 12px;
+            position: relative;
+        }
+
+        /* Smooth & Dynamic Colorful Card Glow Effects */
+        @keyframes dynamicGlow {
+            0%, 100% {
+                box-shadow: 0 4px 18px -2px rgba(37, 99, 235, 0.12), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+            }
+            50% {
+                box-shadow: 0 8px 24px -3px rgba(124, 58, 237, 0.2), 0 4px 10px -2px rgba(37, 99, 235, 0.15);
+            }
+        }
+        .glowing-card {
+            animation: dynamicGlow 5s ease-in-out infinite;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(4px);
+            background-color: rgba(255, 255, 255, 0.93);
+        }
+        .glowing-card:hover {
+            transform: translateY(-2px) scale(1.003);
+            box-shadow: 0 12px 28px -4px rgba(37, 99, 235, 0.25), 0 6px 14px -3px rgba(147, 51, 234, 0.2);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col max-w-2xl mx-auto bg-slate-100 text-slate-800 shadow-xl min-h-screen pb-32 relative">
+
+    <!-- App Header -->
+    <header class="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-900 text-white p-3.5 sticky top-0 z-40 shadow-md">
+        <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+                <div class="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-yellow-300 font-bold text-lg border border-white/20">
+                    👁️
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-wide leading-tight">Anuraj Eye</h1>
+                    <p class="text-[10px] text-blue-200">स्मार्ट निर्माण एवं लेबर हिसाब</p>
+                </div>
+            </div>
+
+            <!-- Online Sync Status Badge -->
+            <div class="flex items-center gap-2">
+                <div id="connection-status-badge" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/20 text-amber-200 border border-amber-400/30 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span id="sync-status-text">कनेक्ट हो रहा है...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Google User Profile & Login Bar -->
+        <div class="flex items-center justify-between pt-2 border-t border-white/15 text-xs">
+            <div id="user-info" class="flex items-center gap-1.5 text-blue-100 truncate max-w-[200px]">
+                <i class="fa-solid fa-circle-user text-sm shrink-0"></i>
+                <span id="user-display-name" class="truncate font-medium text-[11px]">गेस्ट यूज़र (Local Storage)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="google-login-btn" onclick="loginWithGoogle()" class="bg-white text-blue-700 hover:bg-blue-50 px-2.5 py-1 rounded-lg font-bold shadow-sm flex items-center gap-1.5 text-xs transition">
+                    <i class="fa-brands fa-google text-red-500"></i>
+                    <span>गूगल साइन-इन</span>
+                </button>
+                <button id="google-logout-btn" onclick="logoutGoogle()" class="hidden bg-red-600/80 hover:bg-red-700 text-white px-2.5 py-1 rounded-lg font-medium text-xs flex items-center gap-1 transition">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>लॉगआउट</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Content Container -->
+    <main class="p-4 flex-1 pb-32">
+
+        <!-- TAB 1: ATTENDANCE (हाज़िरी) -->
+        <section id="sec-attendance" class="tab-content space-y-4 watermark-bg p-2 rounded-2xl">
+            <!-- Date Picker & Quick Summary Header -->
+            <div class="bg-white/90 p-3.5 rounded-2xl border-l-4 border-l-blue-600 border border-slate-200 shadow-sm flex items-center justify-between flex-wrap gap-2 glowing-card">
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-500 mb-0.5">तारीख चुनें (DD/MM/YY):</label>
+                    <input type="date" id="attendance-date" onchange="renderAttendance()" class="bg-slate-50 border border-slate-300 font-bold rounded-xl px-2.5 py-1 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="changeDate(-1)" class="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-700 font-bold text-xs shadow-sm flex items-center justify-center">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <button onclick="setTodayDate()" class="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl font-bold text-xs">
+                        आज
+                    </button>
+                    <button onclick="changeDate(1)" class="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-700 font-bold text-xs shadow-sm flex items-center justify-center">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button onclick="previewSectionPDF('sec-attendance', 'Anuraj_Eye_Attendance', 'दैनिक हाज़िरी एवं टाइम रजिस्टर')" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-eye"></i> PDF पूर्वावलोकन
+                    </button>
+                </div>
+            </div>
+
+            <!-- Attendance List Container -->
+            <div id="attendance-list" class="space-y-3">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
+
+        <!-- TAB 2: WORKERS (लोग / मिस्त्री / लेबर) -->
+        <section id="sec-workers" class="tab-content hidden space-y-4 watermark-bg p-2 rounded-2xl">
+            <!-- Add New Worker Card -->
+            <div class="bg-white/90 p-4 rounded-2xl border-l-4 border-l-blue-600 border border-slate-200 shadow-sm space-y-3 glowing-card">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus text-blue-600"></i>
+                        <span>नया मिस्त्री / लेबर जोड़ें</span>
+                    </h3>
+                    <button onclick="previewSectionPDF('sec-workers', 'Anuraj_Eye_Workers_List', 'मिस्त्री एवं मज़दूर सूची रजिस्टर')" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-eye"></i> PDF पूर्वावलोकन
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <input type="text" id="new-worker-name" placeholder="नाम (उदा: राम मिस्त्री)" class="bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                    <select id="new-worker-role" onchange="updateDefaultRate(this.value)" class="bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="मिस्त्री">मिस्त्री (Default: ₹900)</option>
+                        <option value="लेबर">लेबर / मज़दूर (Default: ₹500)</option>
+                    </select>
+                    <input type="number" id="new-worker-rate" value="900" placeholder="प्रति दिन रेट (₹)" class="bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <button onclick="addWorker()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-2 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-xs">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>जोड़ें (Save Worker)</span>
+                </button>
+            </div>
+
+            <!-- Workers Grand Total Summary -->
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-3.5 rounded-2xl shadow-md flex justify-around text-center glowing-card border border-indigo-500/30">
+                <div>
+                    <span class="text-[10px] text-slate-300 block">कुल लोग</span>
+                    <span id="grand-workers-count" class="text-base font-bold text-yellow-400">0</span>
+                </div>
+                <div class="border-r border-slate-700"></div>
+                <div>
+                    <span class="text-[10px] text-slate-300 block">कुल एडवांस</span>
+                    <span id="grand-workers-advance" class="text-base font-bold text-rose-400">₹0</span>
+                </div>
+                <div class="border-r border-slate-700"></div>
+                <div>
+                    <span class="text-[10px] text-slate-300 block">कुल बाकी (Net Balance)</span>
+                    <span id="grand-workers-balance" class="text-base font-bold text-emerald-400">₹0</span>
+                </div>
+            </div>
+
+            <p class="text-[11px] text-blue-600 font-semibold px-1">💡 टिप: किसी भी वर्कर कार्ड पर क्लिक करके उनका पूरा दिन-वार हिसाब व हाज़िरी देखें।</p>
+
+            <!-- Workers List -->
+            <div id="workers-list" class="space-y-3">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
+
+        <!-- TAB 3: SHUTTERING / NAAP (नाप-तोल) -->
+        <section id="sec-shuttering" class="tab-content hidden space-y-4 watermark-bg p-2 rounded-2xl">
+            <!-- Add Shuttering Form -->
+            <div class="bg-white/90 p-4 rounded-2xl border-l-4 border-l-purple-600 border border-slate-200 shadow-sm space-y-3 glowing-card">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-ruler text-purple-600"></i>
+                        <span>नया नाप दर्ज करें (Shuttering / Measurement)</span>
+                    </h3>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="toggleCalculator()" class="text-[11px] bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold px-2 py-1 rounded-lg border border-indigo-200 flex items-center gap-1">
+                            <i class="fa-solid fa-calculator"></i>
+                            <span>कैलकुलेटर</span>
+                        </button>
+                        <button onclick="previewSectionPDF('sec-shuttering', 'Anuraj_Eye_Shuttering_Naap', 'नाप-तोल एवं शटरिंग रजिस्टर')" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm">
+                            <i class="fa-solid fa-eye"></i> PDF पूर्वावलोकन
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <input type="text" id="shuttering-title" placeholder="काम का नाम (उदा: पहली मंज़िल छत स्लैब)" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs focus:ring-2 focus:ring-purple-500 outline-none">
+
+                    <div class="flex items-center gap-4 py-0.5">
+                        <label class="text-[11px] font-bold text-slate-600">प्रकार:</label>
+                        <label class="inline-flex items-center gap-1 text-[11px] font-semibold cursor-pointer">
+                            <input type="radio" name="naap-type" value="sqft" checked onchange="toggleNaapType('sqft')" class="text-purple-600">
+                            <span>वर्ग फुट (Sq.Ft)</span>
+                        </label>
+                        <label class="inline-flex items-center gap-1 text-[11px] font-semibold cursor-pointer">
+                            <input type="radio" name="naap-type" value="cuft" onchange="toggleNaapType('cuft')" class="text-purple-600">
+                            <span>घन फुट (Cu.Ft)</span>
+                        </label>
+                    </div>
+
+                    <!-- Feet / Inch Input Fields -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <div class="bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                            <span class="text-[10px] font-bold text-slate-500 block mb-1">लंबाई (Length)</span>
+                            <div class="flex gap-1">
+                                <input type="number" id="naap-l-ft" placeholder="फुट" oninput="calculateNaapTotal()" class="w-full bg-white border border-slate-300 rounded-lg p-1 text-xs font-semibold">
+                                <input type="number" id="naap-l-in" placeholder="इंच" oninput="calculateNaapTotal()" class="w-full bg-white border border-slate-300 rounded-lg p-1 text-xs font-semibold">
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                            <span class="text-[10px] font-bold text-slate-500 block mb-1">चौड़ाई (Width)</span>
+                            <div class="flex gap-1">
+                                <input type="number" id="naap-w-ft" placeholder="फुट" oninput="calculateNaapTotal()" class="w-full bg-white border border-slate-300 rounded-lg p-1 text-xs font-semibold">
+                                <input type="number" id="naap-w-in" placeholder="इंच" oninput="calculateNaapTotal()" class="w-full bg-white border border-slate-300 rounded-lg p-1 text-xs font-semibold">
+                            </div>
+                        </div>
+
+                        <div id="box-height-input" class="bg-slate-50 p-1.5 rounded-xl border border-slate-200 hidden">
+                            <span class="text-[10px] font-bold text-slate-500 block mb-1">ऊंचाई/मोटाई (Height)</span>
+                            <div class="flex gap-1">
+                                <input type="number" id="naap-h-ft" placeholder="फुट" oninput="calculateNaapTotal()" class="w-full bg-white border border-slate-300 rounded-lg p-1 text-xs font-semibold">
+                                <input type="number" id="naap-h-in" placeholder="इंच" oninput="calculateNaapTotal()" class="w-full bg-white border border-slate-300 rounded-lg p-1 text-xs font-semibold">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[10px] font-semibold text-slate-500 block">रेट प्रति फुट (₹):</label>
+                            <input type="number" id="naap-rate" placeholder="रेट ₹" oninput="calculateNaapTotal()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-1.5 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-semibold text-slate-500 block">एडवांस मिला (₹):</label>
+                            <input type="number" id="naap-advance" placeholder="एडवांस ₹" oninput="calculateNaapTotal()" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-1.5 text-xs">
+                        </div>
+                    </div>
+
+                    <!-- Calculated Result Live Display -->
+                    <div class="bg-purple-50 border border-purple-200 p-2.5 rounded-xl flex items-center justify-between text-xs font-bold text-purple-900">
+                        <div>कुल नाप: <span id="naap-calc-area" class="text-xs font-extrabold text-purple-700">0 Sq.Ft</span></div>
+                        <div>कुल राशि: <span id="naap-calc-total" class="text-xs font-extrabold text-emerald-700">₹0</span></div>
+                    </div>
+                </div>
+
+                <button onclick="addShuttering()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-2 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-xs">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>नाप सहेजें (Save Measurement)</span>
+                </button>
+            </div>
+
+            <!-- Floating Built-in Calculator -->
+            <div id="floating-calculator" class="bg-slate-900 text-white p-3.5 rounded-2xl shadow-2xl border border-slate-700 hidden space-y-2 z-50">
+                <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+                    <span class="text-xs font-bold text-yellow-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-calculator"></i> क्विक नाप कैलकुलेटर
+                    </span>
+                    <button onclick="toggleCalculator()" class="text-slate-400 hover:text-white text-xs">
+                        <i class="fa-solid fa-xmark text-base"></i>
+                    </button>
+                </div>
+                <input type="text" id="calc-display" readonly value="0" class="w-full bg-slate-950 text-emerald-400 text-right text-base font-mono p-1.5 rounded-xl border border-slate-700">
+                <div class="grid grid-cols-4 gap-1.5 text-xs font-bold">
+                    <button onclick="calcPress('C')" class="p-2 bg-red-600/80 rounded-lg">C</button>
+                    <button onclick="calcPress('(')" class="p-2 bg-slate-700 rounded-lg">(</button>
+                    <button onclick="calcPress(')')" class="p-2 bg-slate-700 rounded-lg">)</button>
+                    <button onclick="calcPress('/')" class="p-2 bg-amber-600 rounded-lg">÷</button>
+
+                    <button onclick="calcPress('7')" class="p-2 bg-slate-700 rounded-lg">7</button>
+                    <button onclick="calcPress('8')" class="p-2 bg-slate-700 rounded-lg">8</button>
+                    <button onclick="calcPress('9')" class="p-2 bg-slate-700 rounded-lg">9</button>
+                    <button onclick="calcPress('*')" class="p-2 bg-amber-600 rounded-lg">×</button>
+
+                    <button onclick="calcPress('4')" class="p-2 bg-slate-700 rounded-lg">4</button>
+                    <button onclick="calcPress('5')" class="p-2 bg-slate-700 rounded-lg">5</button>
+                    <button onclick="calcPress('6')" class="p-2 bg-slate-700 rounded-lg">6</button>
+                    <button onclick="calcPress('-')" class="p-2 bg-amber-600 rounded-lg">-</button>
+
+                    <button onclick="calcPress('1')" class="p-2 bg-slate-700 rounded-lg">1</button>
+                    <button onclick="calcPress('2')" class="p-2 bg-slate-700 rounded-lg">2</button>
+                    <button onclick="calcPress('3')" class="p-2 bg-slate-700 rounded-lg">3</button>
+                    <button onclick="calcPress('+')" class="p-2 bg-amber-600 rounded-lg">+</button>
+
+                    <button onclick="calcPress('0')" class="p-2 bg-slate-700 rounded-lg col-span-2">0</button>
+                    <button onclick="calcPress('.')" class="p-2 bg-slate-700 rounded-lg">.</button>
+                    <button onclick="calcPress('=')" class="p-2 bg-emerald-600 rounded-lg">=</button>
+                </div>
+            </div>
+
+            <!-- Shuttering Grand Totals Banner -->
+            <div class="bg-gradient-to-r from-purple-950 via-indigo-900 to-slate-900 text-white p-3.5 rounded-2xl shadow-md flex justify-around text-center glowing-card border border-purple-500/30">
+                <div>
+                    <span class="text-[10px] text-purple-200 block">कुल काम (Total)</span>
+                    <span id="grand-shuttering-total" class="text-base font-bold text-yellow-300">₹0</span>
+                </div>
+                <div class="border-r border-purple-700/50"></div>
+                <div>
+                    <span class="text-[10px] text-purple-200 block">कुल एडवांस</span>
+                    <span id="grand-shuttering-advance" class="text-base font-bold text-rose-300">₹0</span>
+                </div>
+                <div class="border-r border-purple-700/50"></div>
+                <div>
+                    <span class="text-[10px] text-purple-200 block">कुल बाकी</span>
+                    <span id="grand-shuttering-balance" class="text-base font-bold text-emerald-300">₹0</span>
+                </div>
+            </div>
+
+            <p class="text-[11px] text-purple-700 font-semibold px-1">💡 टिप: किसी भी नाप पर क्लिक करके उसका पूरा फ़ॉर्मूला व विवरण देखें।</p>
+
+            <!-- Shuttering Records List -->
+            <div id="shuttering-list" class="space-y-3">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
+
+        <!-- TAB 4: EXPENSES (सामान एवं खर्च) -->
+        <section id="sec-expenses" class="tab-content hidden space-y-4 watermark-bg p-2 rounded-2xl">
+            <!-- Add Expense Block / Item -->
+            <div class="bg-white/90 p-4 rounded-2xl border-l-4 border-l-emerald-600 border border-slate-200 shadow-sm space-y-3 glowing-card">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-cart-flatbed text-emerald-600"></i>
+                        <span>सामान या खर्च जोड़ें (Materials & Expenses)</span>
+                    </h3>
+                    <button onclick="previewSectionPDF('sec-expenses', 'Anuraj_Eye_Expenses_Materials', 'सामान एवं खर्च रजिस्टर')" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-eye"></i> PDF पूर्वावलोकन
+                    </button>
+                </div>
+
+                <!-- Category / Block Selection -->
+                <div class="flex gap-2">
+                    <select id="expense-block-select" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <!-- Default options dynamically loaded -->
+                    </select>
+                    <button onclick="addNewExpenseBlock()" class="bg-slate-800 text-white px-3 py-2 rounded-xl font-bold text-[11px] hover:bg-slate-900 transition whitespace-nowrap">
+                        + नया खाता
+                    </button>
+                </div>
+
+                <!-- Item Details Inputs -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <input type="text" id="expense-item-name" placeholder="सामान का नाम (उदा: सीमेंट)" class="bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <input type="number" id="expense-item-qty" placeholder="मात्रा / Quantity (उदा: 50)" class="bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <input type="number" id="expense-item-rate" placeholder="दर / Rate ₹ (उदा: 380)" class="bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" id="expense-item-advance" placeholder="दिया गया एडवांस (₹)" class="bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <button onclick="addExpenseItem()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-2 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-xs">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>आइटम जोड़ें</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Expense Grand Totals Banner -->
+            <div class="bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 text-white p-3.5 rounded-2xl shadow-md space-y-2 glowing-card border border-emerald-500/30">
+                <div class="flex justify-around text-center">
+                    <div>
+                        <span class="text-[10px] text-emerald-200 block">कुल सामान खर्च</span>
+                        <span id="grand-expense-total" class="text-base font-bold text-yellow-300">₹0</span>
+                    </div>
+                    <div class="border-r border-emerald-700/50"></div>
+                    <div>
+                        <span class="text-[10px] text-emerald-200 block">कुल भुगतान/एडवांस</span>
+                        <span id="grand-expense-advance" class="text-base font-bold text-rose-300">₹0</span>
+                    </div>
+                    <div class="border-r border-emerald-700/50"></div>
+                    <div>
+                        <span class="text-[10px] text-emerald-200 block">कुल बाकी देय</span>
+                        <span id="grand-expense-balance" class="text-base font-bold text-amber-300">₹0</span>
+                    </div>
+                </div>
+                <div class="pt-1.5 border-t border-emerald-800/80 text-center">
+                    <span class="text-[10px] text-emerald-200">सामान की कुल योग मात्रा (Total Qty Sum): </span>
+                    <span id="grand-expense-qty-sum" class="text-xs font-extrabold text-white">0 इकाइयां</span>
+                </div>
+            </div>
+
+            <p class="text-[11px] text-emerald-700 font-semibold px-1">💡 टिप: किसी भी सामान पर क्लिक करके उसका पूरा हिसाब व दर देखें।</p>
+
+            <!-- Expense Blocks List -->
+            <div id="expense-blocks-container" class="space-y-4">
+                <!-- Dynamically populated categories -->
+            </div>
+        </section>
+
+        <!-- TAB 5: REPORTS (हिसाब व PDF रिपोर्ट) -->
+        <section id="sec-reports" class="tab-content hidden space-y-4 watermark-bg p-2 rounded-2xl">
+            <!-- Overall Reports Actions Header -->
+            <div class="bg-white/90 p-3.5 rounded-2xl border-l-4 border-l-amber-500 border border-slate-200 shadow-sm flex items-center justify-between flex-wrap gap-2 glowing-card">
+                <div>
+                    <h3 class="font-bold text-slate-800 text-xs">संपूर्ण साइट रिपोर्ट (All Summary)</h3>
+                    <p class="text-[10px] text-slate-500">सभी मिस्त्री/लेबर का दिन-वार हिसाब व बैलेंस</p>
+                </div>
+                <button onclick="previewSectionPDF('sec-reports', 'Anuraj_Eye_Full_Hisaab', 'संपूर्ण निर्माण साइट रिपोर्ट')" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-3 py-1.5 rounded-xl font-bold text-xs shadow-md flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-eye"></i>
+                    <span>संपूर्ण PDF पूर्वावलोकन</span>
+                </button>
+            </div>
+
+            <!-- Worker Reports Container -->
+            <div id="report-container" class="space-y-3">
+                <!-- Dynamically rendered report cards -->
+            </div>
+        </section>
+
+        <!-- TAB 6: EDIT HISTORY (संशोधन इतिहास) -->
+        <section id="sec-history" class="tab-content hidden space-y-4 watermark-bg p-2 rounded-2xl">
+            <div class="bg-white/90 p-3.5 rounded-2xl border-l-4 border-l-indigo-600 border border-slate-200 shadow-sm flex items-center justify-between glowing-card">
+                <div>
+                    <h3 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                        <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i>
+                        <span>संशोधन इतिहास (Edit History / Version Log)</span>
+                    </h3>
+                    <p class="text-[10px] text-slate-500">यहाँ से आप किसी भी बदलाव से पुराना डेटा वापस ला सकते हैं</p>
+                </div>
+                <button onclick="previewSectionPDF('sec-history', 'Anuraj_Eye_Edit_History', 'डेटा संशोधन इतिहास रिपोर्ट')" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm">
+                    <i class="fa-solid fa-eye"></i> PDF पूर्वावलोकन
+                </button>
+            </div>
+
+            <div id="history-container" class="space-y-3">
+                <!-- Dynamically populated history entries -->
+            </div>
+        </section>
+
+        <!-- TAB 7: TRASH / RECYCLE BIN (ट्रैश) -->
+        <section id="sec-trash" class="tab-content hidden space-y-4 watermark-bg p-2 rounded-2xl">
+            <div class="bg-white/90 p-3.5 rounded-2xl border-l-4 border-l-rose-500 border border-slate-200 shadow-sm flex items-center justify-between glowing-card">
+                <div>
+                    <h3 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                        <i class="fa-solid fa-trash-can text-rose-500"></i>
+                        <span>डिलीट किया हुआ डेटा (Recycle Bin)</span>
+                    </h3>
+                    <p class="text-[10px] text-slate-500">पुनः प्राप्त (Restore) करें या स्थायी रूप से डिलीट करें</p>
+                </div>
+            </div>
+
+            <div id="trash-container" class="space-y-3">
+                <!-- Dynamically populated deleted items -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FIXED BOTTOM NAVIGATION BAR WITH HIGH Z-INDEX -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white/95 backdrop-blur-md border-t border-slate-200 z-40 flex justify-around items-center px-1 py-1.5 shadow-2xl">
+        <button onclick="switchTab('attendance')" id="tab-attendance" class="tab-btn active flex-1 py-1 text-center font-medium flex flex-col items-center justify-center gap-0.5">
+            <i class="fa-solid fa-calendar-check text-base"></i>
+            <span class="text-[9px]">हाज़िरी</span>
+        </button>
+        <button onclick="switchTab('workers')" id="tab-workers" class="tab-btn flex-1 py-1 text-center font-medium flex flex-col items-center justify-center gap-0.5">
+            <i class="fa-solid fa-users text-base"></i>
+            <span class="text-[9px]">लोग (रेट)</span>
+        </button>
+        <button onclick="switchTab('shuttering')" id="tab-shuttering" class="tab-btn flex-1 py-1 text-center font-medium flex flex-col items-center justify-center gap-0.5">
+            <i class="fa-solid fa-ruler-combined text-base"></i>
+            <span class="text-[9px]">नाप</span>
+        </button>
+        <button onclick="switchTab('expenses')" id="tab-expenses" class="tab-btn flex-1 py-1 text-center font-medium flex flex-col items-center justify-center gap-0.5">
+            <i class="fa-solid fa-receipt text-base"></i>
+            <span class="text-[9px]">खर्च</span>
+        </button>
+        <button onclick="switchTab('reports')" id="tab-reports" class="tab-btn flex-1 py-1 text-center font-medium flex flex-col items-center justify-center gap-0.5">
+            <i class="fa-solid fa-file-invoice-dollar text-base"></i>
+            <span class="text-[9px]">हिसाब</span>
+        </button>
+        <button onclick="switchTab('history')" id="tab-history" class="tab-btn flex-1 py-1 text-center font-medium flex flex-col items-center justify-center gap-0.5">
+            <i class="fa-solid fa-clock-rotate-left text-base"></i>
+            <span class="text-[9px]">इतिहास</span>
+        </button>
+        <button onclick="switchTab('trash')" id="tab-trash" class="tab-btn flex-1 py-1 text-center font-medium flex flex-col items-center justify-center gap-0.5">
+            <i class="fa-solid fa-trash-arrow-up text-base"></i>
+            <span class="text-[9px]">ट्रैश</span>
+        </button>
+    </nav>
+
+    <!-- Custom Modal 1: PDF PREVIEW MODAL -->
+    <div id="pdf-preview-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex flex-col hidden p-2 sm:p-4 overflow-hidden">
+        <div class="bg-slate-800 text-white p-3 rounded-t-2xl flex items-center justify-between border-b border-slate-700">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-file-pdf text-red-500 text-lg"></i>
+                <div>
+                    <h3 id="pdf-preview-title" class="font-bold text-sm">PDF पूर्वावलोकन (PDF Preview)</h3>
+                    <p class="text-[10px] text-slate-300">कृपया डाउनलोड करने से पहले अपना हिसाब और विवरण जांच लें</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="download-pdf-confirm-btn" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-download"></i> डाउनलोड करें
+                </button>
+                <button onclick="closePDFPreview()" class="text-slate-300 hover:text-white text-lg font-bold p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-3 sm:p-6 bg-slate-200">
+            <div id="pdf-preview-content" class="a4-preview-sheet p-6 text-slate-800 text-xs watermark-bg space-y-4">
+                <!-- Dynamically populated PDF Document Sheet -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Modal 2: Universal Item Detail Modal -->
+    <div id="universal-detail-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-3.5 flex items-center justify-between">
+                <div>
+                    <h3 id="detail-modal-title" class="font-bold text-sm">पूरा विवरण व हिसाब (Detailed Breakdown)</h3>
+                    <p id="detail-modal-subtitle" class="text-[10px] text-blue-200">अनुराज आई - स्मार्ट निर्माण हिसाब</p>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button id="detail-modal-pdf-btn" class="bg-white/20 hover:bg-white/30 text-white px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-file-pdf"></i> PDF
+                    </button>
+                    <button onclick="closeUniversalDetailModal()" class="text-white hover:text-red-200 text-lg font-bold p-1">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="detail-modal-body" class="p-4 overflow-y-auto space-y-4 watermark-bg flex-1">
+                <!-- Dynamically populated calculation breakdown -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Modal 3: Universal Edit Item Modal -->
+    <div id="universal-edit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div class="bg-indigo-700 text-white p-3.5 flex items-center justify-between">
+                <div>
+                    <h3 id="edit-modal-title" class="font-bold text-sm">डेटा संपादित करें (Edit Record)</h3>
+                    <p class="text-[10px] text-indigo-200">पुराना डेटा संशोधन इतिहास में सहेजा जाएगा</p>
+                </div>
+                <button onclick="closeEditModal()" class="text-white hover:text-red-200 text-lg font-bold p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="edit-modal-fields" class="p-4 space-y-3">
+                <!-- Dynamically populated edit input fields -->
+            </div>
+            <div class="p-3 bg-slate-50 border-t border-slate-200 flex gap-2">
+                <button onclick="closeEditModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 rounded-xl text-xs">
+                    रद्द करें
+                </button>
+                <button id="save-edit-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md">
+                    बदलाव सहेजें (Update)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Modal 4: Universal Confirm Dialog -->
+    <div id="custom-confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-5 space-y-4 text-center">
+            <div class="w-11 h-11 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto text-lg font-bold">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <h4 id="confirm-modal-title" class="font-bold text-slate-800 text-sm">क्या आप निश्चित हैं?</h4>
+                <p id="confirm-modal-msg" class="text-xs text-slate-500 mt-1">यह डेटा हटाया जा रहा है।</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="closeCustomConfirm(false)" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 rounded-xl text-xs">
+                    रद्द करें (Cancel)
+                </button>
+                <button id="confirm-modal-action-btn" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-xl text-xs">
+                    हाँ, प्रक्रिया करें
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Toast Message Notification Container -->
+    <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none space-y-2 w-full max-w-xs px-2"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        // Global State Variables
+        const APP_ID = 'anuraj-eye-app';
+        let firebaseApp = null;
+        let auth = null;
+        let rtdb = null;
+        let currentUser = null;
+        let activeTab = 'attendance';
+        let confirmActionCallback = null;
+        let activeEditHandler = null;
+        let pendingPDFTarget = null;
+
+        // Application Collections State
+        let dbState = {
+            workers: [],
+            attendance: {}, // { 'YYYY-MM-DD': { workerId: { status: 'P'/'H'/'A', advance: 0, inTime: '09:00', outTime: '17:00' } } }
+            shuttering: [],
+            expenseBlocks: ['सीमेंट', 'ईंटें व बालू', 'लोहा व सरिया', 'अन्य खर्च'],
+            expenseItems: [],
+            trash: [],
+            editHistory: [] // Historical revision logs
+        };
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCMKbIdN6XPqi4Z6vvaBJrle441y8HUnrM",
+            authDomain: "anuraj-eye.firebaseapp.com",
+            projectId: "anuraj-eye",
+            storageBucket: "anuraj-eye.firebasestorage.app",
+            messagingSenderId: "166322503294",
+            appId: "1:166322503294:web:17688ca89680553777622f",
+            databaseURL: "https://anuraj-eye-default-rtdb.firebaseio.com"
+        };
+
+        // Date Helper: Formats YYYY-MM-DD or ISO string into DD/MM/YY
+        window.formatDateDDMMYY = function(dateInput) {
+            if (!dateInput) return '';
+            const d = new Date(dateInput);
+            if (isNaN(d.getTime())) return dateInput;
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = String(d.getFullYear()).slice(-2);
+            return `${day}/${month}/${year}`;
+        };
+
+        function initFirebase() {
+            try {
+                firebaseApp = initializeApp(firebaseConfig);
+                auth = getAuth(firebaseApp);
+                rtdb = getDatabase(firebaseApp);
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        currentUser = user;
+                        document.getElementById('user-display-name').innerText = user.displayName || user.email || 'लॉग-इन यूज़र';
+                        document.getElementById('google-login-btn').classList.add('hidden');
+                        document.getElementById('google-logout-btn').classList.remove('hidden');
+                        updateStatusBadge('online', 'ऑनलाइन क्लाउड सिंक');
+                        attachRealtimeListener();
+                    } else {
+                        currentUser = null;
+                        document.getElementById('user-display-name').innerText = 'गेस्ट यूज़र (Local Storage)';
+                        document.getElementById('google-login-btn').classList.remove('hidden');
+                        document.getElementById('google-logout-btn').classList.add('hidden');
+                        updateStatusBadge('offline', 'लोकल मोड (ऑफ़लाइन)');
+                        loadLocalData();
+                    }
+                });
+            } catch (err) {
+                console.warn("Firebase Init Fallback:", err);
+                updateStatusBadge('offline', 'लोकल मोड (ऑफ़लाइन)');
+                loadLocalData();
+            }
+        }
+
+        function updateStatusBadge(type, message) {
+            const badge = document.getElementById('connection-status-badge');
+            const text = document.getElementById('sync-status-text');
+            if (!badge || !text) return;
+            text.innerText = message;
+            if (type === 'online') {
+                badge.className = "px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 flex items-center gap-1.5";
+            } else {
+                badge.className = "px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/20 text-amber-200 border border-amber-400/30 flex items-center gap-1.5";
+            }
+        }
+
+        window.loginWithGoogle = async function() {
+            if (!auth) {
+                showToast("Firebase सक्रिय नहीं है!", "error");
+                return;
+            }
+            try {
+                const provider = new GoogleAuthProvider();
+                provider.setCustomParameters({ prompt: 'select_account' });
+                const result = await signInWithPopup(auth, provider);
+                showToast(`स्वागत है: ${result.user.displayName || 'यूज़र'}`, "success");
+            } catch (err) {
+                console.error("Google Login Error:", err);
+                showToast("गूगल साइन-इन त्रुटि: " + (err.message || 'प्रयास करें'), "error");
+            }
+        };
+
+        window.logoutGoogle = async function() {
+            if (auth) {
+                await signOut(auth);
+                showToast("सफलतापूर्वक लॉगआउट हुए", "info");
+            }
+        };
+
+        function loadLocalData() {
+            const local = localStorage.getItem('ANURAJ_EYE_DATA');
+            if (local) {
+                try {
+                    dbState = Object.assign(dbState, JSON.parse(local));
+                } catch(e) { console.error(e); }
+            }
+            renderAll();
+        }
+
+        function saveState() {
+            localStorage.setItem('ANURAJ_EYE_DATA', JSON.stringify(dbState));
+            renderAll();
+
+            if (currentUser && rtdb) {
+                const userRef = ref(rtdb, `artifacts/${APP_ID}/users/${currentUser.uid}`);
+                set(userRef, dbState)
+                    .then(() => {
+                        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        showToast(`🟢 ऑनलाइन सहेजा गया (${timeStr})`, "success");
+                    })
+                    .catch((err) => {
+                        console.error("Cloud Save Error:", err);
+                        showToast("🟡 लोकल डिवाइस में सहेजा गया", "warning");
+                    });
+            } else {
+                showToast("🟡 लोकल में सहेजा गया", "info");
+            }
+        }
+
+        function attachRealtimeListener() {
+            if (!currentUser || !rtdb) return;
+            const userRef = ref(rtdb, `artifacts/${APP_ID}/users/${currentUser.uid}`);
+            onValue(userRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    dbState = Object.assign(dbState, data);
+                    localStorage.setItem('ANURAJ_EYE_DATA', JSON.stringify(dbState));
+                    renderAll();
+                }
+            });
+        }
+
+        window.previewSectionPDF = function(sectionId, fileNamePrefix, customTitle) {
+            const element = document.getElementById(sectionId);
+            if (!element) return;
+            openPDFPreviewModal(element.cloneNode(true), customTitle || 'रिपोर्ट पूर्वावलोकन', fileNamePrefix);
+        };
+
+        window.previewElementPDF = function(elementId, fileNamePrefix, customTitle) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            openPDFPreviewModal(element.cloneNode(true), customTitle || 'कार्ड हिसाब विवरण', fileNamePrefix);
+        };
+
+        function openPDFPreviewModal(clonedNode, titleText, fileNamePrefix) {
+            const modal = document.getElementById('pdf-preview-modal');
+            const titleElem = document.getElementById('pdf-preview-title');
+            const container = document.getElementById('pdf-preview-content');
+
+            // Strip IDs from clonedNode to prevent ID collisions in document
+            clonedNode.removeAttribute('id');
+            clonedNode.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+
+            titleElem.innerText = `PDF पूर्वावलोकन: ${titleText}`;
+
+            clonedNode.querySelectorAll('button, input[type="date"], select, nav').forEach(el => {
+                if (!el.classList.contains('keep-pdf')) {
+                    el.style.display = 'none';
+                }
+            });
+
+            const currentDate = formatDateDDMMYY(new Date());
+
+            container.innerHTML = `
+                <div class="border-b-2 border-indigo-700 pb-3 flex justify-between items-end">
+                    <div>
+                        <h2 class="text-xl font-bold text-indigo-900 tracking-tight">👁️ Anuraj Eye</h2>
+                        <p class="text-[10px] text-slate-500">स्मार्ट निर्माण, लेबर एवं नाप-तोल हिसाब प्रणाली</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full block mb-1">${titleText}</span>
+                        <span class="text-[10px] text-slate-600 font-semibold">दिनांक: ${currentDate}</span>
+                    </div>
+                </div>
+                <div class="pt-2">
+                    ${clonedNode.innerHTML}
+                </div>
+                <div class="border-t border-slate-300 pt-3 flex justify-between items-center text-[9px] text-slate-400">
+                    <span>Generated by Anuraj Eye Smart Management System</span>
+                    <span>Page 1 of 1</span>
+                </div>
+            `;
+
+            pendingPDFTarget = {
+                element: container,
+                filename: `${fileNamePrefix}_${new Date().toISOString().split('T')[0]}.pdf`
+            };
+
+            modal.classList.remove('hidden');
+        }
+
+        window.closePDFPreview = function() {
+            document.getElementById('pdf-preview-modal').classList.add('hidden');
+            document.getElementById('pdf-preview-content').innerHTML = '';
+            pendingPDFTarget = null;
+        };
+
+        // Attach PDF Download Confirm Listener
+        document.getElementById('download-pdf-confirm-btn').addEventListener('click', function() {
+            if (!pendingPDFTarget || !pendingPDFTarget.element) {
+                showToast("डाउनलोड के लिए कोई पूर्वावलोकन उपलब्ध नहीं है", "error");
+                return;
+            }
+            const opt = {
+                margin:       [8, 8, 8, 8],
+                filename:     pendingPDFTarget.filename,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(pendingPDFTarget.element).save().then(() => {
+                showToast("PDF सफलतापूर्वक डाउनलोड हो गई!", "success");
+            }).catch(err => {
+                console.error(err);
+                showToast("PDF डाउनलोड में समस्या आई", "error");
+            });
+        });
+
+        window.openUniversalDetail = function(type, id) {
+            const modal = document.getElementById('universal-detail-modal');
+            const titleElem = document.getElementById('detail-modal-title');
+            const subElem = document.getElementById('detail-modal-subtitle');
+            const bodyElem = document.getElementById('detail-modal-body');
+            const pdfBtn = document.getElementById('detail-modal-pdf-btn');
+
+            if (type === 'worker') {
+                const worker = dbState.workers.find(w => w.id === id);
+                if (!worker) return;
+
+                const stats = calculateWorkerStats(worker.id);
+                titleElem.innerText = `मज़दूर हिसाब: ${worker.name}`;
+                subElem.innerText = `${worker.role} | दैनिक दर: ₹${worker.rate} | दर्ज: ${formatDateDDMMYY(worker.createdAt || Date.now())}`;
+
+                const dates = Object.keys(dbState.attendance).sort();
+                let rowsHTML = '';
+                dates.forEach(d => {
+                    const rec = dbState.attendance[d][worker.id];
+                    if (rec) {
+                        const hrs = calculateHours(rec.inTime || '09:00', rec.outTime || '17:00');
+                        let earned = rec.status === 'P' ? worker.rate : rec.status === 'H' ? (worker.rate / 2) : 0;
+                        rowsHTML += `
+                            <tr class="border-b border-slate-100 text-xs">
+                                <td class="py-2 px-1 font-bold text-slate-700">${formatDateDDMMYY(d)}</td>
+                                <td class="py-2 px-1 font-bold ${rec.status==='P'?'text-emerald-600':rec.status==='H'?'text-amber-600':'text-red-500'}">${rec.status==='P'?'Full (P)':rec.status==='H'?'Half (H)':'Off (A)'}</td>
+                                <td class="py-2 px-1 text-slate-500">${rec.inTime||'09:00'} - ${rec.outTime||'17:00'} (${hrs}h)</td>
+                                <td class="py-2 px-1 font-bold text-right text-slate-800">₹${earned}</td>
+                                <td class="py-2 px-1 font-bold text-right text-red-600">₹${rec.advance||0}</td>
+                            </tr>
+                        `;
+                    }
+                });
+
+                bodyElem.innerHTML = `
+                    <div class="bg-blue-50 p-3 rounded-2xl border border-blue-200 grid grid-cols-2 gap-2 text-xs">
+                        <div><span class="text-[10px] text-slate-500 block">कुल काम के दिन</span><span class="font-bold text-slate-800 text-sm">${stats.totalDays} दिन</span></div>
+                        <div><span class="text-[10px] text-slate-500 block">कुल काम के घंटे</span><span class="font-bold text-indigo-700 text-sm">${stats.totalHours} घंटे</span></div>
+                        <div><span class="text-[10px] text-slate-500 block">कुल बनी कमाई</span><span class="font-bold text-emerald-700 text-sm">₹${Math.round(stats.totalEarned)}</span></div>
+                        <div><span class="text-[10px] text-slate-500 block">कुल एडवांस लिया</span><span class="font-bold text-red-600 text-sm">₹${Math.round(stats.totalAdvance)}</span></div>
+                    </div>
+
+                    <div class="bg-emerald-50 p-3 rounded-2xl border border-emerald-200 flex justify-between items-center">
+                        <span class="font-bold text-slate-700 text-xs">कुल बाकी भुगतान (Net Balance):</span>
+                        <span class="font-extrabold text-base ${stats.netBalance>=0?'text-emerald-700':'text-red-600'}">₹${Math.round(stats.netBalance)}</span>
+                    </div>
+
+                    <div>
+                        <h4 class="font-bold text-slate-800 text-xs mb-2">तारीख-वार हाज़िरी एवं भुगतान रजिस्टर:</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr class="bg-slate-100 text-[9px] font-bold text-slate-500 border-b border-slate-200 uppercase">
+                                        <th class="py-1.5 px-1">तारीख</th>
+                                        <th class="py-1.5 px-1">हाज़िरी</th>
+                                        <th class="py-1.5 px-1">समय/घंटे</th>
+                                        <th class="py-1.5 px-1 text-right">कमाई</th>
+                                        <th class="py-1.5 px-1 text-right">एडवांस</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${rowsHTML || '<tr><td colspan="5" class="py-4 text-center text-slate-400">कोई रिकॉर्ड नहीं</td></tr>'}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+
+                pdfBtn.onclick = () => previewSectionPDF('universal-detail-modal', `Hisaab_${worker.name}`, `मिस्त्री/लेबर हिसाब (${worker.name})`);
+            } else if (type === 'shuttering') {
+                const shutter = dbState.shuttering.find(s => s.id === id);
+                if (!shutter) return;
+
+                titleElem.innerText = `नाप विवरण: ${shutter.title}`;
+                subElem.innerText = `प्रकार: ${shutter.type==='sqft'?'वर्ग फुट (Sq.Ft)':'घन फुट (Cu.Ft)'} | दिनांक: ${formatDateDDMMYY(shutter.date)}`;
+
+                const bal = shutter.totalAmount - shutter.advance;
+
+                bodyElem.innerHTML = `
+                    <div class="bg-indigo-50 p-3 rounded-2xl border border-indigo-200 space-y-2 text-xs">
+                        <div class="font-bold text-indigo-900 border-b border-indigo-200 pb-1 flex justify-between">
+                            <span>📐 नाप का फ़ॉर्मूला एवं मापदंड:</span>
+                            <span>दिनांक: ${formatDateDDMMYY(shutter.date)}</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 text-slate-700">
+                            <div><span class="text-[10px] text-slate-500 block">लंबाई:</span><span class="font-bold">${shutter.lFt||0}' ${shutter.lIn||0}"</span></div>
+                            <div><span class="text-[10px] text-slate-500 block">चौड़ाई:</span><span class="font-bold">${shutter.wFt||0}' ${shutter.wIn||0}"</span></div>
+                            ${shutter.type==='cuft'?`<div><span class="text-[10px] text-slate-500 block">ऊंचाई:</span><span class="font-bold">${shutter.hFt||0}' ${shutter.hIn||0}"</span></div>`:''}
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-2 text-xs">
+                        <div class="flex justify-between py-1 border-b border-slate-100">
+                            <span class="text-slate-500">कुल क्षेत्रफल/आयतन:</span>
+                            <span class="font-extrabold text-blue-700">${shutter.area.toFixed(2)} ${shutter.type==='sqft'?'Sq.Ft':'Cu.Ft'}</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-100">
+                            <span class="text-slate-500">दर प्रति फुट:</span>
+                            <span class="font-bold text-slate-800">₹${shutter.rate} / फुट</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-100">
+                            <span class="text-slate-500">कुल बनी राशि:</span>
+                            <span class="font-extrabold text-slate-800">₹${Math.round(shutter.totalAmount)}</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-100">
+                            <span class="text-slate-500">प्राप्त एडवांस:</span>
+                            <span class="font-bold text-red-600">₹${Math.round(shutter.advance)}</span>
+                        </div>
+                        <div class="flex justify-between py-1 font-bold text-sm bg-emerald-50 p-2 rounded-xl text-emerald-800">
+                            <span>बाकी देय राशि (Balance):</span>
+                            <span>₹${Math.round(bal)}</span>
+                        </div>
+                    </div>
+                `;
+
+                pdfBtn.onclick = () => previewSectionPDF('universal-detail-modal', `Naap_${shutter.title}`, `नाप एवं शटरिंग हिसाब (${shutter.title})`);
+            } else if (type === 'expense') {
+                const exp = dbState.expenseItems.find(e => e.id === id);
+                if (!exp) return;
+
+                titleElem.innerText = `सामान विवरण: ${exp.name}`;
+                subElem.innerText = `खाता / कैटेगिरी: ${exp.block} | दिनांक: ${formatDateDDMMYY(exp.date)}`;
+
+                const bal = exp.total - (exp.advance || 0);
+
+                bodyElem.innerHTML = `
+                    <div class="bg-amber-50 p-3 rounded-2xl border border-amber-200 space-y-1 text-xs flex justify-between items-center">
+                        <div>
+                            <span class="text-[10px] text-amber-800 font-bold uppercase block">सामान खाता</span>
+                            <span class="font-bold text-slate-800 text-sm">${exp.block}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-slate-500 block">तारीख</span>
+                            <span class="font-bold text-slate-800">${formatDateDDMMYY(exp.date)}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-2 text-xs">
+                        <div class="flex justify-between py-1 border-b border-slate-100">
+                            <span class="text-slate-500">सामान का नाम:</span>
+                            <span class="font-bold text-slate-800">${exp.name}</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-100">
+                            <span class="text-slate-500">मात्रा (Quantity):</span>
+                            <span class="font-bold text-blue-700">${exp.qty} इकाइयां</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-100">
+                            <span class="text-slate-500">प्रति इकाई दर:</span>
+                            <span class="font-bold text-slate-800">₹${exp.rate}</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-100">
+                            <span class="text-slate-500">कुल योग (Qty × Rate):</span>
+                            <span class="font-extrabold text-slate-800">₹${Math.round(exp.total)}</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-100">
+                            <span class="text-slate-500">दिया गया भुगतान/एडवांस:</span>
+                            <span class="font-bold text-red-600">₹${Math.round(exp.advance||0)}</span>
+                        </div>
+                        <div class="flex justify-between py-1 font-bold text-sm bg-amber-50 p-2 rounded-xl text-amber-900">
+                            <span>बाकी देय राशि:</span>
+                            <span>₹${Math.round(bal)}</span>
+                        </div>
+                    </div>
+                `;
+
+                pdfBtn.onclick = () => previewSectionPDF('universal-detail-modal', `Expense_${exp.name}`, `सामान/खर्च हिसाब (${exp.name})`);
+            }
+
+            modal.classList.remove('hidden');
+        };
+
+        window.closeUniversalDetailModal = function() {
+            document.getElementById('universal-detail-modal').classList.add('hidden');
+        };
+
+        function renderAll() {
+            renderWorkers();
+            renderAttendance();
+            renderExpenseBlocksSelect();
+            renderShuttering();
+            renderExpenses();
+            renderReports();
+            renderHistory();
+            renderTrash();
+        }
+
+        function renderWorkers() {
+            const container = document.getElementById('workers-list');
+            if (!container) return;
+
+            if (dbState.workers.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">कोई मज़दूर या मिस्त्री नहीं जुड़ा है। ऊपर से नया जोड़ें।</div>`;
+                document.getElementById('grand-workers-count').innerText = "0";
+                document.getElementById('grand-workers-advance').innerText = "₹0";
+                document.getElementById('grand-workers-balance').innerText = "₹0";
+                return;
+            }
+
+            let totalAdv = 0;
+            let totalBal = 0;
+
+            container.innerHTML = dbState.workers.map(w => {
+                const stats = calculateWorkerStats(w.id);
+                totalAdv += stats.totalAdvance;
+                totalBal += stats.netBalance;
+                const cardId = `worker-card-${w.id}`;
+                const dateStr = formatDateDDMMYY(w.createdAt || Date.now());
+
+                return `
+                    <div id="${cardId}" onclick="openUniversalDetail('worker', '${w.id}')" class="bg-white/95 p-3.5 rounded-2xl border-l-4 border-l-blue-600 border border-slate-200 hover:border-blue-400 shadow-sm hover:shadow-md transition cursor-pointer space-y-2.5 watermark-bg glowing-card">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-slate-800 text-xs">${escapeHTML(w.name)} 👁️</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${w.role==='मिस्त्री'?'bg-amber-100 text-amber-800':'bg-blue-100 text-blue-800'}">${w.role}</span>
+                                    <span class="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-semibold"><i class="fa-regular fa-calendar-check text-[9px] text-blue-600"></i> ${dateStr}</span>
+                                </div>
+                                <div class="text-[10px] text-slate-500 mt-0.5">रेट: ₹${w.rate}/दिन | कुल हाज़िरी: ${stats.totalDays} दिन (${stats.totalHours} घंटे)</div>
+                            </div>
+                            <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
+                                <button onclick="previewElementPDF('${cardId}', 'Worker_${escapeHTML(w.name)}', 'मिस्त्री/लेबर हिसाब (${escapeHTML(w.name)})')" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-sm transition" title="PDF पूर्वावलोकन">
+                                    <i class="fa-solid fa-eye"></i> PDF
+                                </button>
+                                <button onclick="openEditWorker('${w.id}')" class="text-indigo-600 hover:text-indigo-800 p-1.5 bg-indigo-50 rounded-lg text-xs" title="संपादित करें">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button onclick="requestDelete('worker', '${w.id}')" class="text-slate-300 hover:text-red-500 p-1.5" title="डिलीट करें">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Complete Detailed Breakdown on Card -->
+                        <div class="grid grid-cols-3 gap-1.5 bg-slate-50/90 p-2 rounded-xl text-[11px] text-center border border-slate-100">
+                            <div>
+                                <span class="text-[9px] text-slate-400 block">कुल कमाई</span>
+                                <span class="font-bold text-slate-800">₹${Math.round(stats.totalEarned)}</span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] text-slate-400 block">कुल एडवांस</span>
+                                <span class="font-bold text-red-600">₹${Math.round(stats.totalAdvance)}</span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] text-slate-400 block">बाकी देय</span>
+                                <span class="font-extrabold ${stats.netBalance >= 0 ? 'text-emerald-600' : 'text-red-600'}">₹${Math.round(stats.netBalance)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('grand-workers-count').innerText = dbState.workers.length;
+            document.getElementById('grand-workers-advance').innerText = `₹${Math.round(totalAdv)}`;
+            document.getElementById('grand-workers-balance').innerText = `₹${Math.round(totalBal)}`;
+        }
+
+        function renderAttendance() {
+            const container = document.getElementById('attendance-list');
+            if (!container) return;
+
+            const dateStr = document.getElementById('attendance-date').value;
+            const formattedDate = formatDateDDMMYY(dateStr);
+            const attMap = dbState.attendance[dateStr] || {};
+
+            if (dbState.workers.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">हाज़िरी लगाने के लिए नीचे 'लोग (रेट)' टैब में जाकर मिस्त्री/लेबर जोड़ें।</div>`;
+                return;
+            }
+
+            container.innerHTML = dbState.workers.map(w => {
+                const item = attMap[w.id] || { status: 'A', advance: 0, inTime: '09:00', outTime: '17:00' };
+                const hoursWorked = calculateHours(item.inTime || '09:00', item.outTime || '17:00');
+
+                return `
+                    <div class="bg-white/95 p-3.5 rounded-2xl border-l-4 border-l-blue-500 border border-slate-200 shadow-sm space-y-3 glowing-card">
+                        <div class="flex items-center justify-between">
+                            <div onclick="openUniversalDetail('worker', '${w.id}')" class="cursor-pointer">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-bold text-slate-800 text-xs hover:text-blue-600">${escapeHTML(w.name)} 👁️</span>
+                                    <span class="text-[9px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-bold">${formattedDate}</span>
+                                </div>
+                                <span class="text-[10px] text-slate-400">${w.role} (₹${w.rate}/दिन)</span>
+                            </div>
+
+                            <div class="flex gap-1 bg-slate-100 p-1 rounded-xl">
+                                <button onclick="setAttendance('${w.id}', 'P')" class="px-2.5 py-0.5 rounded-lg text-[11px] font-bold transition ${item.status==='P'?'bg-emerald-600 text-white shadow':'text-slate-600 hover:bg-slate-200'}">P (Full)</button>
+                                <button onclick="setAttendance('${w.id}', 'H')" class="px-2.5 py-0.5 rounded-lg text-[11px] font-bold transition ${item.status==='H'?'bg-amber-500 text-white shadow':'text-slate-600 hover:bg-slate-200'}">H (Half)</button>
+                                <button onclick="setAttendance('${w.id}', 'A')" class="px-2.5 py-0.5 rounded-lg text-[11px] font-bold transition ${item.status==='A'?'bg-red-500 text-white shadow':'text-slate-600 hover:bg-slate-200'}">A (Off)</button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-4 gap-2 pt-2 border-t border-slate-100 items-center">
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 block">आने का समय</label>
+                                <input type="time" value="${item.inTime||'09:00'}" onchange="setAttendanceTime('${w.id}', 'in', this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1 text-[11px] font-semibold">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 block">जाने का समय</label>
+                                <input type="time" value="${item.outTime||'17:00'}" onchange="setAttendanceTime('${w.id}', 'out', this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1 text-[11px] font-semibold">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 block">कुल समय</label>
+                                <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-1 text-[11px] font-bold text-center">
+                                    ${hoursWorked} घंटे
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 block">आज एडवांस (₹)</label>
+                                <input type="number" value="${item.advance||''}" placeholder="₹0" onchange="setAttendanceAdvance('${w.id}', this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1 text-[11px] font-bold text-red-600">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderShuttering() {
+            const container = document.getElementById('shuttering-list');
+            if (!container) return;
+
+            if (dbState.shuttering.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">कोई नाप दर्ज नहीं है। ऊपर फॉर्म भरें।</div>`;
+                document.getElementById('grand-shuttering-total').innerText = "₹0";
+                document.getElementById('grand-shuttering-advance').innerText = "₹0";
+                document.getElementById('grand-shuttering-balance').innerText = "₹0";
+                return;
+            }
+
+            let grandTotal = 0;
+            let grandAdv = 0;
+
+            container.innerHTML = dbState.shuttering.map(s => {
+                grandTotal += s.totalAmount;
+                grandAdv += s.advance;
+                const bal = s.totalAmount - s.advance;
+                const cardId = `shutter-card-${s.id}`;
+                const dateFormatted = formatDateDDMMYY(s.date);
+
+                return `
+                    <div id="${cardId}" onclick="openUniversalDetail('shuttering', '${s.id}')" class="bg-white/95 p-3.5 rounded-2xl border-l-4 border-l-purple-600 border border-slate-200 hover:border-purple-400 shadow-sm hover:shadow-md transition cursor-pointer space-y-2.5 watermark-bg glowing-card">
+                        <div class="flex items-start justify-between border-b border-slate-100 pb-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h4 class="font-bold text-slate-800 text-xs">${escapeHTML(s.title)} 📐</h4>
+                                    <span class="text-[9px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded font-bold">${dateFormatted}</span>
+                                </div>
+                                <span class="text-[10px] text-slate-500">${s.type==='sqft'?'वर्ग फुट (Sq.Ft)':'घन फुट (Cu.Ft)'}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5" onclick="event.stopPropagation()">
+                                <button onclick="previewElementPDF('${cardId}', 'Shuttering_${escapeHTML(s.title)}', 'नाप हिसाब (${escapeHTML(s.title)})')" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-2 py-0.5 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-sm transition" title="PDF पूर्वावलोकन">
+                                    <i class="fa-solid fa-eye"></i> PDF
+                                </button>
+                                <button onclick="openEditShuttering('${s.id}')" class="text-indigo-600 hover:text-indigo-800 p-1 bg-indigo-50 rounded-lg text-xs" title="संपादित करें">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button onclick="requestDelete('shuttering', '${s.id}')" class="text-slate-300 hover:text-red-500 p-1">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Formula & Dimension Details Breakdown -->
+                        <div class="text-[11px] bg-purple-50/60 p-2 rounded-xl border border-purple-100 grid grid-cols-2 gap-1 text-slate-700">
+                            <div><span class="text-[9px] text-slate-400 block">नाप फ़ॉर्मूला:</span><span class="font-bold">${s.lFt||0}'${s.lIn||0}" × ${s.wFt||0}'${s.wIn||0}" ${s.type==='cuft'?`× ${s.hFt||0}'${s.hIn||0}"`:''}</span></div>
+                            <div class="text-right"><span class="text-[9px] text-slate-400 block">कुल नाप:</span><span class="font-bold text-blue-700">${s.area.toFixed(2)} ${s.type==='sqft'?'Sq.Ft':'Cu.Ft'}</span></div>
+                        </div>
+
+                        <div class="flex items-center justify-between text-[11px] pt-0.5 font-semibold">
+                            <span class="text-slate-600">दर: ₹${s.rate}/फुट</span>
+                            <span class="text-slate-800">कुल: ₹${Math.round(s.totalAmount)}</span>
+                            <span class="text-red-600">एडवांस: ₹${Math.round(s.advance)}</span>
+                            <span class="text-emerald-600 font-bold">बाकी: ₹${Math.round(bal)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('grand-shuttering-total').innerText = `₹${Math.round(grandTotal)}`;
+            document.getElementById('grand-shuttering-advance').innerText = `₹${Math.round(grandAdv)}`;
+            document.getElementById('grand-shuttering-balance').innerText = `₹${Math.round(grandTotal - grandAdv)}`;
+        }
+
+        function renderExpenseBlocksSelect() {
+            const select = document.getElementById('expense-block-select');
+            if (!select) return;
+            select.innerHTML = dbState.expenseBlocks.map(b => `<option value="${escapeHTML(b)}">${escapeHTML(b)}</option>`).join('');
+        }
+
+        function renderExpenses() {
+            const container = document.getElementById('expense-blocks-container');
+            if (!container) return;
+
+            if (dbState.expenseItems.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">कोई सामान या खर्च दर्ज नहीं है।</div>`;
+                document.getElementById('grand-expense-total').innerText = "₹0";
+                document.getElementById('grand-expense-advance').innerText = "₹0";
+                document.getElementById('grand-expense-balance').innerText = "₹0";
+                document.getElementById('grand-expense-qty-sum').innerText = "0 इकाइयां";
+                return;
+            }
+
+            let gTotal = 0;
+            let gAdv = 0;
+            let gQtySum = 0;
+            let blockIndex = 0;
+
+            container.innerHTML = dbState.expenseBlocks.map(blockName => {
+                const items = dbState.expenseItems.filter(i => i.block === blockName);
+                if (items.length === 0) return '';
+
+                blockIndex++;
+                const cardId = `exp-block-card-${blockIndex}`;
+
+                let blockTotal = 0;
+                let blockAdv = 0;
+                let blockQty = 0;
+
+                const itemsHTML = items.map(i => {
+                    blockTotal += i.total;
+                    blockAdv += (i.advance || 0);
+                    blockQty += (i.qty || 1);
+
+                    gTotal += i.total;
+                    gAdv += (i.advance || 0);
+                    gQtySum += (i.qty || 1);
+
+                    const itemBal = i.total - (i.advance || 0);
+                    const formattedItemDate = formatDateDDMMYY(i.date);
+
+                    return `
+                        <div onclick="openUniversalDetail('expense', '${i.id}')" class="flex items-center justify-between text-[11px] py-2 border-b border-slate-100 last:border-0 hover:bg-slate-50/80 p-1.5 rounded-xl cursor-pointer transition">
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-bold text-slate-800 hover:text-emerald-700">${escapeHTML(i.name)}</span>
+                                    <span class="text-[9px] bg-emerald-50 text-emerald-700 px-1 py-0.2 rounded font-bold">${formattedItemDate}</span>
+                                </div>
+                                <span class="text-[10px] text-slate-500">मात्रा: ${i.qty} x दर: ₹${i.rate}</span>
+                            </div>
+                            <div class="flex items-center gap-2" onclick="event.stopPropagation()">
+                                <div class="text-right">
+                                    <span class="font-bold text-slate-800 block">₹${Math.round(i.total)}</span>
+                                    <span class="text-[9px] ${itemBal>=0?'text-amber-700':'text-emerald-600'} font-semibold">देय: ₹${Math.round(itemBal)}</span>
+                                </div>
+                                <button onclick="openEditExpense('${i.id}')" class="text-indigo-600 hover:text-indigo-800 p-1 bg-indigo-50 rounded-lg text-xs" title="संपादित करें">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button onclick="requestDelete('expense', '${i.id}')" class="text-slate-300 hover:text-red-500 p-1">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div id="${cardId}" class="bg-white/95 p-3.5 rounded-2xl border-l-4 border-l-emerald-600 border border-slate-200 shadow-sm space-y-2 watermark-bg glowing-card">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                                    <i class="fa-solid fa-folder text-amber-500"></i> ${escapeHTML(blockName)}
+                                </span>
+                                <button onclick="previewElementPDF('${cardId}', 'Expense_${escapeHTML(blockName)}', 'सामान/खर्च विवरण (${escapeHTML(blockName)})')" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white px-2 py-0.5 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-sm transition" title="इस खाते का PDF पूर्वावलोकन">
+                                    <i class="fa-solid fa-eye"></i> PDF
+                                </button>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-bold text-blue-700 block">योग: ₹${Math.round(blockTotal)}</span>
+                                <span class="text-[9px] text-slate-500 font-semibold">कुल मात्रा: ${blockQty} इकाइयां</span>
+                            </div>
+                        </div>
+                        <div>${itemsHTML}</div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('grand-expense-total').innerText = `₹${Math.round(gTotal)}`;
+            document.getElementById('grand-expense-advance').innerText = `₹${Math.round(gAdv)}`;
+            document.getElementById('grand-expense-balance').innerText = `₹${Math.round(gTotal - gAdv)}`;
+            document.getElementById('grand-expense-qty-sum').innerText = `${gQtySum} इकाइयां`;
+        }
+
+        function renderReports() {
+            const container = document.getElementById('report-container');
+            if (!container) return;
+
+            if (dbState.workers.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">कोई रिपोर्ट उपलब्ध नहीं है।</div>`;
+                return;
+            }
+
+            container.innerHTML = dbState.workers.map(w => {
+                const stats = calculateWorkerStats(w.id);
+                const dateFormatted = formatDateDDMMYY(w.createdAt || Date.now());
+
+                return `
+                    <div onclick="openUniversalDetail('worker', '${w.id}')" class="bg-white/95 p-3.5 rounded-2xl border-l-4 border-l-amber-500 border border-slate-200 hover:border-blue-500 shadow-sm hover:shadow-md transition cursor-pointer space-y-2 glowing-card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                                    ${escapeHTML(w.name)}
+                                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full ${w.role==='मिस्त्री'?'bg-amber-100 text-amber-800':'bg-blue-100 text-blue-800'}">${w.role}</span>
+                                    <span class="text-[9px] bg-slate-100 text-slate-600 px-1 py-0.2 rounded font-semibold">${dateFormatted}</span>
+                                </h4>
+                                <p class="text-[10px] text-blue-600 mt-0.5">👉 पूरा दिन-वार हिसाब देखने के लिए क्लिक करें</p>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 bg-slate-50/90 p-2 rounded-xl text-xs text-center border border-slate-100">
+                            <div>
+                                <span class="text-[9px] text-slate-400 block">हाज़िरी (दिन/घंटे)</span>
+                                <span class="font-bold text-slate-700">${stats.totalDays}d (${stats.totalHours}h)</span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] text-slate-400 block">कुल कमाई</span>
+                                <span class="font-bold text-slate-700">₹${Math.round(stats.totalEarned)}</span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] text-slate-400 block">बाकी देय</span>
+                                <span class="font-bold ${stats.netBalance>=0?'text-emerald-600':'text-red-600'}">₹${Math.round(stats.netBalance)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('history-container');
+            if (!container) return;
+
+            if (!dbState.editHistory || dbState.editHistory.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">कोई संशोधन इतिहास दर्ज नहीं है। जब आप डेटा संपादित करेंगे, तब यहाँ पुराना वर्ज़न दिखेगा।</div>`;
+                return;
+            }
+
+            container.innerHTML = dbState.editHistory.map(h => {
+                const orig = h.originalObj;
+                const nameStr = orig.name || orig.title || 'रिकॉर्ड';
+                const formattedHistDate = formatDateDDMMYY(h.timestamp);
+
+                return `
+                    <div class="bg-white/95 p-3 rounded-2xl border-l-4 border-l-indigo-600 border border-slate-200 shadow-sm flex items-center justify-between text-xs glowing-card">
+                        <div>
+                            <span class="font-bold text-slate-800 block">${escapeHTML(nameStr)} (${h.notes})</span>
+                            <span class="text-[10px] text-slate-500">प्रकार: ${h.type} | तिथि: ${formattedHistDate}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="revertEdit('${h.historyId}')" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-2.5 py-1 rounded-xl font-bold border border-indigo-200 flex items-center gap-1 text-[11px]">
+                                <i class="fa-solid fa-rotate-left"></i> Revert
+                            </button>
+                            <button onclick="deleteHistoryEntry('${h.historyId}')" class="bg-red-50 text-red-600 hover:bg-red-100 px-2 py-1 rounded-xl font-bold border border-red-200 flex items-center gap-1 text-[11px]" title="इस इतिहास रिकॉर्ड को हटाएँ">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.renderTrash = function() {
+            const container = document.getElementById('trash-container');
+            if (!container) return;
+
+            if (!dbState.trash || dbState.trash.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">रीसायकल बिन (Trash) खाली है।</div>`;
+                return;
+            }
+
+            container.innerHTML = dbState.trash.map(t => {
+                const titleStr = t.title || t.name || 'हटाया गया आइटम';
+                const typeLabel = t.trashType === 'worker' ? 'मिस्त्री/लेबर' : t.trashType === 'shuttering' ? 'नाप' : 'सामान/खर्च';
+                const formattedDelDate = formatDateDDMMYY(t.deletedAt || Date.now());
+
+                return `
+                    <div class="bg-white/95 p-3 rounded-2xl border-l-4 border-l-rose-500 border border-slate-200 shadow-sm flex items-center justify-between text-xs glowing-card">
+                        <div>
+                            <span class="font-bold text-slate-800 block">${escapeHTML(titleStr)}</span>
+                            <span class="text-[10px] text-slate-500">प्रकार: ${typeLabel} | हटाया गया: ${formattedDelDate}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="restoreItem('${t.id}')" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2.5 py-1 rounded-xl font-bold border border-emerald-200 flex items-center gap-1 text-[11px]">
+                                <i class="fa-solid fa-rotate-left"></i> रीस्टोर
+                            </button>
+                            <button onclick="permanentDeleteTrash('${t.id}')" class="bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1 rounded-xl font-bold border border-red-200 flex items-center gap-1 text-[11px]">
+                                <i class="fa-solid fa-trash-can"></i> स्थायी डिलीट
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        function calculateHours(inTime, outTime) {
+            if (!inTime || !outTime) return 0;
+            const [inH, inM] = inTime.split(':').map(Number);
+            const [outH, outM] = outTime.split(':').map(Number);
+            let inMinutes = inH * 60 + (inM || 0);
+            let outMinutes = outH * 60 + (outM || 0);
+            if (outMinutes < inMinutes) outMinutes += 24 * 60;
+            const diffMinutes = outMinutes - inMinutes;
+            const hours = diffMinutes / 60;
+            return hours % 1 === 0 ? hours.toFixed(0) : hours.toFixed(1);
+        }
+
+        function calculateWorkerStats(workerId) {
+            const worker = dbState.workers.find(w => w.id === workerId);
+            if (!worker) return { totalDays: 0, totalEarned: 0, totalAdvance: 0, netBalance: 0, totalHours: 0 };
+
+            let totalDays = 0;
+            let totalAdvance = 0;
+            let totalHours = 0;
+
+            Object.keys(dbState.attendance).forEach(dateStr => {
+                const record = dbState.attendance[dateStr][workerId];
+                if (record) {
+                    if (record.status === 'P') totalDays += 1;
+                    if (record.status === 'H') totalDays += 0.5;
+                    if (record.status === 'P' || record.status === 'H') {
+                        const hrs = parseFloat(calculateHours(record.inTime || '09:00', record.outTime || '17:00')) || 0;
+                        totalHours += hrs;
+                    }
+                    totalAdvance += (record.advance || 0);
+                }
+            });
+
+            const totalEarned = totalDays * worker.rate;
+            const netBalance = totalEarned - totalAdvance;
+
+            return { totalDays, totalEarned, totalAdvance, netBalance, totalHours };
+        }
+
+        window.recordEditHistory = function(type, originalObj, notes) {
+            if (!dbState.editHistory) dbState.editHistory = [];
+            dbState.editHistory.unshift({
+                historyId: 'hist_' + Date.now(),
+                type: type,
+                originalObj: JSON.parse(JSON.stringify(originalObj)),
+                timestamp: new Date().toISOString(),
+                notes: notes || 'संशोधन किया गया'
+            });
+        };
+
+        window.revertEdit = function(historyId) {
+            const idx = dbState.editHistory.findIndex(h => h.historyId === historyId);
+            if (idx === -1) return;
+
+            const entry = dbState.editHistory[idx];
+            const type = entry.type;
+            const obj = entry.originalObj;
+
+            if (type === 'worker') {
+                const existingIdx = dbState.workers.findIndex(w => w.id === obj.id);
+                if (existingIdx !== -1) dbState.workers[existingIdx] = obj;
+                else dbState.workers.push(obj);
+            } else if (type === 'shuttering') {
+                const existingIdx = dbState.shuttering.findIndex(s => s.id === obj.id);
+                if (existingIdx !== -1) dbState.shuttering[existingIdx] = obj;
+                else dbState.shuttering.push(obj);
+            } else if (type === 'expense') {
+                const existingIdx = dbState.expenseItems.findIndex(e => e.id === obj.id);
+                if (existingIdx !== -1) dbState.expenseItems[existingIdx] = obj;
+                else dbState.expenseItems.push(obj);
+            }
+
+            dbState.editHistory.splice(idx, 1);
+            saveState();
+            showToast("पुराना वर्ज़न रीस्टोर कर दिया गया है!", "success");
+        };
+
+        window.deleteHistoryEntry = function(historyId) {
+            if (!dbState.editHistory) return;
+            dbState.editHistory = dbState.editHistory.filter(h => h.historyId !== historyId);
+            saveState();
+            showToast("संशोधन इतिहास से डिलीट कर दिया गया", "info");
+        };
+
+        window.openEditWorker = function(id) {
+            const worker = dbState.workers.find(w => w.id === id);
+            if (!worker) return;
+
+            document.getElementById('edit-modal-title').innerText = `संपादित करें: ${worker.name}`;
+            const fieldsContainer = document.getElementById('edit-modal-fields');
+
+            fieldsContainer.innerHTML = `
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 block mb-1">नाम</label>
+                    <input type="text" id="edit-worker-name" value="${escapeHTML(worker.name)}" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs font-semibold">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 block mb-1">रोल</label>
+                    <select id="edit-worker-role" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs font-semibold">
+                        <option value="मिस्त्री" ${worker.role==='मिस्त्री'?'selected':''}>मिस्त्री</option>
+                        <option value="लेबर" ${worker.role==='लेबर'?'selected':''}>लेबर / मज़दूर</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 block mb-1">दर प्रति दिन (₹)</label>
+                    <input type="number" id="edit-worker-rate" value="${worker.rate}" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs font-semibold">
+                </div>
+            `;
+
+            activeEditHandler = () => {
+                const newName = document.getElementById('edit-worker-name').value.trim();
+                const newRole = document.getElementById('edit-worker-role').value;
+                const newRate = parseFloat(document.getElementById('edit-worker-rate').value) || 0;
+
+                if (!newName) { showToast("नाम दर्ज करें!", "error"); return; }
+
+                recordEditHistory('worker', worker, `नाम/दर बदला गया (${worker.name})`);
+                worker.name = newName;
+                worker.role = newRole;
+                worker.rate = newRate;
+
+                saveState();
+                closeEditModal();
+                showToast("वर्कर विवरण अपडेट हो गया", "success");
+            };
+
+            document.getElementById('universal-edit-modal').classList.remove('hidden');
+        };
+
+        window.openEditShuttering = function(id) {
+            const shutter = dbState.shuttering.find(s => s.id === id);
+            if (!shutter) return;
+
+            document.getElementById('edit-modal-title').innerText = `नाप संपादित करें: ${shutter.title}`;
+            const fieldsContainer = document.getElementById('edit-modal-fields');
+
+            fieldsContainer.innerHTML = `
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 block mb-1">काम का नाम</label>
+                    <input type="text" id="edit-shutter-title" value="${escapeHTML(shutter.title)}" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs font-semibold">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 block mb-1">दर ₹</label>
+                        <input type="number" id="edit-shutter-rate" value="${shutter.rate}" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs font-semibold">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 block mb-1">एडवांस ₹</label>
+                        <input type="number" id="edit-shutter-advance" value="${shutter.advance}" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs font-semibold">
+                    </div>
+                </div>
+            `;
+
+            activeEditHandler = () => {
+                const newTitle = document.getElementById('edit-shutter-title').value.trim();
+                const newRate = parseFloat(document.getElementById('edit-shutter-rate').value) || 0;
+                const newAdvance = parseFloat(document.getElementById('edit-shutter-advance').value) || 0;
+
+                if (!newTitle) { showToast("नाम दर्ज करें!", "error"); return; }
+
+                recordEditHistory('shuttering', shutter, `नाप बदला गया (${shutter.title})`);
+                shutter.title = newTitle;
+                shutter.rate = newRate;
+                shutter.advance = newAdvance;
+                shutter.totalAmount = shutter.area * newRate;
+
+                saveState();
+                closeEditModal();
+                showToast("नाप रिकॉर्ड अपडेट हो गया", "success");
+            };
+
+            document.getElementById('universal-edit-modal').classList.remove('hidden');
+        };
+
+        window.openEditExpense = function(id) {
+            const exp = dbState.expenseItems.find(e => e.id === id);
+            if (!exp) return;
+
+            document.getElementById('edit-modal-title').innerText = `सामान संपादित करें: ${exp.name}`;
+            const fieldsContainer = document.getElementById('edit-modal-fields');
+
+            fieldsContainer.innerHTML = `
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 block mb-1">सामान का नाम</label>
+                    <input type="text" id="edit-exp-name" value="${escapeHTML(exp.name)}" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs font-semibold">
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 block mb-1">मात्रा (Qty)</label>
+                        <input type="number" id="edit-exp-qty" value="${exp.qty}" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs font-semibold">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 block mb-1">दर ₹</label>
+                        <input type="number" id="edit-exp-rate" value="${exp.rate}" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs font-semibold">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 block mb-1">एडवांस ₹</label>
+                        <input type="number" id="edit-exp-advance" value="${exp.advance||0}" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs font-semibold">
+                    </div>
+                </div>
+            `;
+
+            activeEditHandler = () => {
+                const newName = document.getElementById('edit-exp-name').value.trim();
+                const newQty = parseFloat(document.getElementById('edit-exp-qty').value) || 1;
+                const newRate = parseFloat(document.getElementById('edit-exp-rate').value) || 0;
+                const newAdv = parseFloat(document.getElementById('edit-exp-advance').value) || 0;
+
+                if (!newName) { showToast("नाम दर्ज करें!", "error"); return; }
+
+                recordEditHistory('expense', exp, `सामान बदला गया (${exp.name})`);
+                exp.name = newName;
+                exp.qty = newQty;
+                exp.rate = newRate;
+                exp.total = newQty * newRate;
+                exp.advance = newAdv;
+
+                saveState();
+                closeEditModal();
+                showToast("सामान रिकॉर्ड अपडेट हो गया", "success");
+            };
+
+            document.getElementById('universal-edit-modal').classList.remove('hidden');
+        };
+
+        window.closeEditModal = function() {
+            document.getElementById('universal-edit-modal').classList.add('hidden');
+            activeEditHandler = null;
+        };
+
+        document.getElementById('save-edit-btn').addEventListener('click', () => {
+            if (activeEditHandler) activeEditHandler();
+        });
+
+        window.addWorker = function() {
+            const nameInput = document.getElementById('new-worker-name');
+            const roleSelect = document.getElementById('new-worker-role');
+            const rateInput = document.getElementById('new-worker-rate');
+
+            const name = nameInput.value.trim();
+            const role = roleSelect.value;
+            const rate = parseFloat(rateInput.value) || (role === 'मिस्त्री' ? 900 : 500);
+
+            if (!name) {
+                showToast("कृपया नाम दर्ज करें!", "error");
+                return;
+            }
+
+            dbState.workers.push({
+                id: 'w_' + Date.now(),
+                name: name,
+                role: role,
+                rate: rate,
+                createdAt: new Date().toISOString()
+            });
+
+            nameInput.value = '';
+            saveState();
+            showToast(`${name} को सफलतापूर्वक जोड़ा गया`, "success");
+        };
+
+        window.updateDefaultRate = function(role) {
+            document.getElementById('new-worker-rate').value = role === 'मिस्त्री' ? 900 : 500;
+        };
+
+        window.setAttendance = function(workerId, status) {
+            const dateStr = document.getElementById('attendance-date').value;
+            if (!dateStr) return;
+
+            if (!dbState.attendance[dateStr]) dbState.attendance[dateStr] = {};
+            if (!dbState.attendance[dateStr][workerId]) {
+                dbState.attendance[dateStr][workerId] = { status: 'A', advance: 0, inTime: '09:00', outTime: '17:00' };
+            }
+
+            dbState.attendance[dateStr][workerId].status = status;
+            saveState();
+        };
+
+        window.setAttendanceAdvance = function(workerId, val) {
+            const dateStr = document.getElementById('attendance-date').value;
+            if (!dateStr) return;
+
+            if (!dbState.attendance[dateStr]) dbState.attendance[dateStr] = {};
+            if (!dbState.attendance[dateStr][workerId]) {
+                dbState.attendance[dateStr][workerId] = { status: 'A', advance: 0, inTime: '09:00', outTime: '17:00' };
+            }
+
+            dbState.attendance[dateStr][workerId].advance = parseFloat(val) || 0;
+            saveState();
+        };
+
+        window.setAttendanceTime = function(workerId, type, val) {
+            const dateStr = document.getElementById('attendance-date').value;
+            if (!dateStr) return;
+
+            if (!dbState.attendance[dateStr]) dbState.attendance[dateStr] = {};
+            if (!dbState.attendance[dateStr][workerId]) {
+                dbState.attendance[dateStr][workerId] = { status: 'A', advance: 0, inTime: '09:00', outTime: '17:00' };
+            }
+
+            if (type === 'in') dbState.attendance[dateStr][workerId].inTime = val;
+            if (type === 'out') dbState.attendance[dateStr][workerId].outTime = val;
+            saveState();
+        };
+
+        window.toggleNaapType = function(type) {
+            const boxH = document.getElementById('box-height-input');
+            if (type === 'cuft') {
+                boxH.classList.remove('hidden');
+            } else {
+                boxH.classList.add('hidden');
+            }
+            calculateNaapTotal();
+        };
+
+        window.calculateNaapTotal = function() {
+            const naapType = document.querySelector('input[name="naap-type"]:checked')?.value || 'sqft';
+            const lFt = parseFloat(document.getElementById('naap-l-ft').value) || 0;
+            const lIn = parseFloat(document.getElementById('naap-l-in').value) || 0;
+            const wFt = parseFloat(document.getElementById('naap-w-ft').value) || 0;
+            const wIn = parseFloat(document.getElementById('naap-w-in').value) || 0;
+            const hFt = parseFloat(document.getElementById('naap-h-ft').value) || 0;
+            const hIn = parseFloat(document.getElementById('naap-h-in').value) || 0;
+
+            const rate = parseFloat(document.getElementById('naap-rate').value) || 0;
+
+            const totalL = lFt + (lIn / 12);
+            const totalW = wFt + (wIn / 12);
+            const totalH = hFt + (hIn / 12);
+
+            let area = 0;
+            if (naapType === 'sqft') {
+                area = totalL * totalW;
+                document.getElementById('naap-calc-area').innerText = `${area.toFixed(2)} Sq.Ft`;
+            } else {
+                area = totalL * totalW * totalH;
+                document.getElementById('naap-calc-area').innerText = `${area.toFixed(2)} Cu.Ft`;
+            }
+
+            const totalCost = area * rate;
+            document.getElementById('naap-calc-total').innerText = `₹${Math.round(totalCost).toLocaleString()}`;
+        };
+
+        window.addShuttering = function() {
+            const title = document.getElementById('shuttering-title').value.trim();
+            if (!title) {
+                showToast("कृपया काम का नाम दर्ज करें!", "error");
+                return;
+            }
+
+            const naapType = document.querySelector('input[name="naap-type"]:checked')?.value || 'sqft';
+            const lFt = parseFloat(document.getElementById('naap-l-ft').value) || 0;
+            const lIn = parseFloat(document.getElementById('naap-l-in').value) || 0;
+            const wFt = parseFloat(document.getElementById('naap-w-ft').value) || 0;
+            const wIn = parseFloat(document.getElementById('naap-w-in').value) || 0;
+            const hFt = parseFloat(document.getElementById('naap-h-ft').value) || 0;
+            const hIn = parseFloat(document.getElementById('naap-h-in').value) || 0;
+
+            const rate = parseFloat(document.getElementById('naap-rate').value) || 0;
+            const advance = parseFloat(document.getElementById('naap-advance').value) || 0;
+
+            const totalL = lFt + (lIn / 12);
+            const totalW = wFt + (wIn / 12);
+            const totalH = hFt + (hIn / 12);
+
+            let area = naapType === 'sqft' ? (totalL * totalW) : (totalL * totalW * totalH);
+            let totalAmount = area * rate;
+
+            dbState.shuttering.push({
+                id: 'sh_' + Date.now(),
+                title: title,
+                type: naapType,
+                lFt, lIn, wFt, wIn, hFt, hIn,
+                area: area,
+                rate: rate,
+                totalAmount: totalAmount,
+                advance: advance,
+                date: new Date().toISOString().split('T')[0]
+            });
+
+            document.getElementById('shuttering-title').value = '';
+            document.getElementById('naap-l-ft').value = '';
+            document.getElementById('naap-l-in').value = '';
+            document.getElementById('naap-w-ft').value = '';
+            document.getElementById('naap-w-in').value = '';
+            document.getElementById('naap-h-ft').value = '';
+            document.getElementById('naap-h-in').value = '';
+            document.getElementById('naap-rate').value = '';
+            document.getElementById('naap-advance').value = '';
+            calculateNaapTotal();
+
+            saveState();
+            showToast("नाप सफलतापूर्वक सहेजा गया", "success");
+        };
+
+        window.addNewExpenseBlock = function() {
+            const blockName = prompt("नए खाते/कैटेगिरी का नाम दर्ज करें (उदा: प्लंबिंग, टाइल्स):");
+            if (blockName && blockName.trim()) {
+                const trimmed = blockName.trim();
+                if (!dbState.expenseBlocks.includes(trimmed)) {
+                    dbState.expenseBlocks.push(trimmed);
+                    saveState();
+                }
+            }
+        };
+
+        window.addExpenseItem = function() {
+            const blockSelect = document.getElementById('expense-block-select');
+            const nameInput = document.getElementById('expense-item-name');
+            const qtyInput = document.getElementById('expense-item-qty');
+            const rateInput = document.getElementById('expense-item-rate');
+            const advInput = document.getElementById('expense-item-advance');
+
+            const block = blockSelect.value;
+            const name = nameInput.value.trim();
+            const qty = parseFloat(qtyInput.value) || 1;
+            const rate = parseFloat(rateInput.value) || 0;
+            const advance = parseFloat(advInput.value) || 0;
+
+            if (!name) {
+                showToast("कृपया सामान का नाम दर्ज करें!", "error");
+                return;
+            }
+
+            const total = qty * rate;
+
+            dbState.expenseItems.push({
+                id: 'exp_' + Date.now(),
+                block: block,
+                name: name,
+                qty: qty,
+                rate: rate,
+                total: total,
+                advance: advance,
+                date: new Date().toISOString().split('T')[0]
+            });
+
+            nameInput.value = '';
+            qtyInput.value = '';
+            rateInput.value = '';
+            advInput.value = '';
+
+            saveState();
+            showToast("सामान/खर्च सफलतापूर्वक दर्ज हुआ", "success");
+        };
+
+        window.requestDelete = function(type, id) {
+            let itemObj = null;
+            let title = '';
+
+            if (type === 'worker') {
+                itemObj = dbState.workers.find(w => w.id === id);
+                title = itemObj ? itemObj.name : '';
+            } else if (type === 'shuttering') {
+                itemObj = dbState.shuttering.find(s => s.id === id);
+                title = itemObj ? itemObj.title : '';
+            } else if (type === 'expense') {
+                itemObj = dbState.expenseItems.find(e => e.id === id);
+                title = itemObj ? itemObj.name : '';
+            }
+
+            if (!itemObj) return;
+
+            document.getElementById('confirm-modal-title').innerText = `क्या आप "${title}" को हटाना चाहते हैं?`;
+            document.getElementById('confirm-modal-msg').innerText = "यह डेटा रीसायकल बिन (Trash) में चला जाएगा जहाँ से आप इसे दोबारा ला सकते हैं।";
+            document.getElementById('confirm-modal-action-btn').classList.remove('hidden');
+            document.getElementById('custom-confirm-modal').classList.remove('hidden');
+
+            confirmActionCallback = () => {
+                dbState.trash.push(Object.assign({}, itemObj, { trashType: type, deletedAt: new Date().toISOString() }));
+
+                if (type === 'worker') dbState.workers = dbState.workers.filter(w => w.id !== id);
+                if (type === 'shuttering') dbState.shuttering = dbState.shuttering.filter(s => s.id !== id);
+                if (type === 'expense') dbState.expenseItems = dbState.expenseItems.filter(e => e.id !== id);
+
+                saveState();
+                showToast("आइटम ट्रैश में भेज दिया गया है", "info");
+            };
+        };
+
+        window.permanentDeleteTrash = function(id) {
+            const trashItem = dbState.trash.find(t => t.id === id);
+            if (!trashItem) return;
+
+            document.getElementById('confirm-modal-title').innerText = `क्या आप "${trashItem.title || trashItem.name}" को हमेशा के लिए डिलीट करना चाहते हैं?`;
+            document.getElementById('confirm-modal-msg').innerText = "यह डेटा हमेशा के लिए मिट जाएगा और दोबारा रीस्टोर नहीं हो सकेगा!";
+            document.getElementById('confirm-modal-action-btn').classList.remove('hidden');
+            document.getElementById('custom-confirm-modal').classList.remove('hidden');
+
+            confirmActionCallback = () => {
+                dbState.trash = dbState.trash.filter(t => t.id !== id);
+                saveState();
+                showToast("डेटा स्थायी रूप से हटा दिया गया", "info");
+            };
+        };
+
+        window.closeCustomConfirm = function(proceed) {
+            document.getElementById('custom-confirm-modal').classList.add('hidden');
+            if (proceed && confirmActionCallback) {
+                confirmActionCallback();
+            }
+            confirmActionCallback = null;
+        };
+
+        document.getElementById('confirm-modal-action-btn').addEventListener('click', () => closeCustomConfirm(true));
+
+        window.restoreItem = function(id) {
+            const trashIdx = dbState.trash.findIndex(t => t.id === id);
+            if (trashIdx === -1) return;
+
+            const item = dbState.trash[trashIdx];
+            dbState.trash.splice(trashIdx, 1);
+
+            if (item.trashType === 'worker') dbState.workers.push(item);
+            if (item.trashType === 'shuttering') dbState.shuttering.push(item);
+            if (item.trashType === 'expense') dbState.expenseItems.push(item);
+
+            saveState();
+            showToast("डेटा वापस रीस्टोर कर दिया गया है", "success");
+        };
+
+        window.switchTab = function(tabName) {
+            activeTab = tabName;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(`sec-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        };
+
+        window.toggleCalculator = function() {
+            const calc = document.getElementById('floating-calculator');
+            calc.classList.toggle('hidden');
+        };
+
+        window.calcPress = function(val) {
+            const display = document.getElementById('calc-display');
+            if (val === 'C') {
+                display.value = '0';
+            } else if (val === '=') {
+                try {
+                    display.value = eval(display.value) || '0';
+                } catch(e) {
+                    display.value = 'Error';
+                }
+            } else {
+                if (display.value === '0' || display.value === 'Error') display.value = '';
+                display.value += val;
+            }
+        };
+
+        window.showToast = function(msg, type = "info") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            let bgClass = "bg-slate-800 text-white";
+            if (type === "success") bgClass = "bg-emerald-600 text-white shadow-emerald-200";
+            if (type === "error") bgClass = "bg-red-600 text-white shadow-red-200";
+            if (type === "warning") bgClass = "bg-amber-500 text-white shadow-amber-200";
+
+            toast.className = `${bgClass} px-3.5 py-2 rounded-xl text-xs font-bold shadow-lg flex items-center justify-between transition-all transform translate-y-2 pointer-events-auto`;
+            toast.innerHTML = `<span>${msg}</span>`;
+
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        };
+
+        window.changeDate = function(offset) {
+            const dateInput = document.getElementById('attendance-date');
+            const current = new Date(dateInput.value || new Date());
+            current.setDate(current.getDate() + offset);
+            dateInput.value = current.toISOString().split('T')[0];
+            renderAttendance();
+        };
+
+        window.setTodayDate = function() {
+            document.getElementById('attendance-date').value = new Date().toISOString().split('T')[0];
+            renderAttendance();
+        };
+
+        function escapeHTML(str) {
+            return String(str || '').replace(/[&<>"']/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[match]);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setTodayDate();
+            initFirebase();
+            loadLocalData();
+        });
+    </script>
+</body>
+</html>
